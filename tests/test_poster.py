@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from scripts.compose_poster import PosterCompositionError, compose_poster
+from scripts.compose_reference_poster import compose_reference_poster
 from scripts.verify_output import OutputVerificationError, verify_output
 
 
@@ -38,6 +39,7 @@ class PosterPipelineTests(unittest.TestCase):
                     "confidence": 0.9,
                     "fallback_used": False,
                     "scene_product_bbox_normalized": [0.62, 0.43, 0.86, 0.68],
+                    "scene_product_width_ratio": 0.24,
                 },
                 ensure_ascii=False,
             ),
@@ -73,6 +75,30 @@ class PosterPipelineTests(unittest.TestCase):
         self.assertFalse(manifest["layout"]["text_overflow"])
         self.assertTrue(manifest["layout"]["status_badge_drawn"])
         self.assertEqual(manifest["status_badge"], "识别成功")
+
+    def test_reference_template_creates_black_editorial_layout(self):
+        output = self.root / "reference-poster.png"
+        result = compose_reference_poster(
+            self.background, self.content, self.analysis, self.brand, output
+        )
+        with Image.open(output) as image:
+            self.assertEqual(image.size, (1080, 1350))
+            self.assertEqual(image.getpixel((10, 10)), (14, 14, 20))
+        manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["layout"]["template"], "reference-editorial-black-v1")
+
+    def test_reference_template_rejects_a_small_product(self):
+        analysis = json.loads(self.analysis.read_text(encoding="utf-8"))
+        analysis["scene_product_width_ratio"] = 0.12
+        self.analysis.write_text(json.dumps(analysis), encoding="utf-8")
+        with self.assertRaisesRegex(PosterCompositionError, "产品主体宽度"):
+            compose_reference_poster(
+                self.background,
+                self.content,
+                self.analysis,
+                self.brand,
+                self.root / "reference-poster.png",
+            )
 
     def test_verify_output_rejects_wrong_dimensions(self):
         output = self.root / "poster.png"
