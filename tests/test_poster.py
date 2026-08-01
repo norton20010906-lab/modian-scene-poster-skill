@@ -57,7 +57,8 @@ class PosterPipelineTests(unittest.TestCase):
         result = compose_poster(
             self.background, self.content, self.analysis, self.brand, output
         )
-        self.assertEqual(Image.open(output).size, (1080, 1350))
+        with Image.open(output) as image:
+            self.assertEqual(image.size, (1080, 1350))
         self.assertTrue(result.manifest_path.exists())
         manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
         self.assertEqual(manifest["status"], "complete")
@@ -84,6 +85,54 @@ class PosterPipelineTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(OutputVerificationError, "尺寸"):
             verify_output(output, manifest)
+
+    def test_verify_output_rejects_manifest_point_not_in_catalog(self):
+        output = self.root / "poster.png"
+        Image.new("RGB", (1080, 1350), "white").save(output)
+        manifest = self.root / "manifest.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "status": "complete",
+                    "brand": "魔点门禁",
+                    "model": "M1-PRO",
+                    "scene": "企业办公入口",
+                    "fallback_used": False,
+                    "selling_point_ids": ["face", "entry", "invented"],
+                    "layout": {"text_overflow": False},
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        catalog = self.root / "products.yaml"
+        catalog.write_text(
+            json.dumps(
+                {
+                    "products": [
+                        {
+                            "model": "M1-PRO",
+                            "aliases": [],
+                            "enabled": True,
+                            "category": "刷脸门禁机",
+                            "verified_features": ["人脸识别"],
+                            "selling_points": [
+                                {"id": "face", "text": "刷脸快速通行", "verified": True},
+                                {"id": "entry", "text": "适用于企业入口", "verified": True},
+                                {"id": "attendance", "text": "支持考勤管理", "verified": True},
+                            ],
+                            "recommended_scenes": ["企业办公入口"],
+                            "prohibited_claims": ["绝对零误识"],
+                            "sources": [{"label": "官方资料", "status": "verified"}],
+                        }
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(OutputVerificationError, "资料库"):
+            verify_output(output, manifest, catalog)
 
 
 if __name__ == "__main__":
