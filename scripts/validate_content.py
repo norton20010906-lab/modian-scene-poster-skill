@@ -39,6 +39,11 @@ def validate_content(
     if not subtitle or len(subtitle) > SUBTITLE_MAX:
         raise ContentValidationError(f"副标题必须为 1～{SUBTITLE_MAX} 个字符")
 
+    allowed_scenes = product.get("recommended_scenes", [])
+    scene = str(content.get("scene") or (allowed_scenes[0] if allowed_scenes else ""))
+    if not scene or scene not in allowed_scenes:
+        raise ContentValidationError("使用场景必须来自产品资料库")
+
     ids = content.get("selling_point_ids")
     if not isinstance(ids, list) or not 3 <= len(ids) <= 4:
         raise ContentValidationError("卖点必须为 3～4 条")
@@ -74,6 +79,7 @@ def validate_content(
         "model": product["model"],
         "title": title,
         "subtitle": subtitle,
+        "scene": scene,
         "selling_point_ids": ids,
         "selling_points": [verified[item_id] for item_id in ids],
     }

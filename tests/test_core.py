@@ -83,6 +83,7 @@ class ContentValidationTests(unittest.TestCase):
     def setUp(self):
         self.product = {
             "model": "M1-PRO",
+            "recommended_scenes": ["企业办公入口", "企业前台"],
             "selling_points": [
                 {"id": "face", "text": "刷脸快速通行", "verified": True},
                 {"id": "entry", "text": "适用于企业入口", "verified": True},
@@ -98,10 +99,24 @@ class ContentValidationTests(unittest.TestCase):
             "model": "M1-PRO",
             "title": "让通行更从容",
             "subtitle": "面向企业入口的智能通行体验",
+            "scene": "企业前台",
             "selling_point_ids": ["face", "entry", "attendance"],
         }
         result = validate_content(content, self.product)
         self.assertEqual(result["selling_points"][0], "刷脸快速通行")
+        self.assertEqual(result["scene"], "企业前台")
+
+    def test_scene_outside_product_catalog_is_rejected(self):
+        content = {
+            "brand": "魔点门禁",
+            "model": "M1-PRO",
+            "title": "让通行更从容",
+            "subtitle": "面向企业入口的智能通行体验",
+            "scene": "机场安检口",
+            "selling_point_ids": ["face", "entry", "attendance"],
+        }
+        with self.assertRaisesRegex(ContentValidationError, "使用场景"):
+            validate_content(content, self.product)
 
     def test_unverified_selling_point_is_rejected(self):
         content = {
@@ -128,4 +143,3 @@ class ContentValidationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
