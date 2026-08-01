@@ -4,9 +4,9 @@
 
 ## 当前状态
 
-工作流、事实约束、海报合成、输出校验和测试已实现。首发型号已录入为 D5 Ultra；当前可宣传的能力严格限制在用户提供图片中可直接核实的“智能人脸考勤门禁机”、人脸识别、考勤门禁一体和前置可视化显示屏。收到官方资料后可补充并复核卖点。
+工作流、证据收集、事实约束、海报合成、输出校验和测试已实现。首发型号已录入为 D5 Ultra；当前可宣传的能力由魔点官网产品目录与用户提供图片共同支持，并逐条绑定来源 ID。
 
-V1 不包含独立 Web Demo、外部 API、联网搜索、多品牌、多型号模糊匹配或视频生成。
+V1 不包含独立 Web Demo、外部模型 API、多品牌、多型号模糊匹配或视频生成。允许最多 3 次官方优先的只读定向搜索，用于刷新证据；生成时仍只读取本地已核验资料库。
 
 ## 快速开始
 
@@ -16,7 +16,7 @@ V1 不包含独立 Web Demo、外部 API、联网搜索、多品牌、多型号�
    python -m pip install -r requirements.txt
    ```
 
-2. 用真实型号资料替换 `data/products.yaml` 中的占位记录。每条卖点需要稳定 ID、准确正文和 `verified: true`，并至少提供一个 `status: verified` 的来源。
+2. 按 `references/product_research_workflow.md` 维护 `data/products.yaml`。每条卖点需要稳定 ID、准确正文、`verified: true` 和可解析的 `source_ids`。
 
 3. 把产品图片附加到 Agent 对话或提供本地绝对路径，然后说：
 
@@ -28,6 +28,7 @@ V1 不包含独立 Web Demo、外部 API、联网搜索、多品牌、多型号�
 
    ```text
    analysis.json
+   research.json
    scene_plan.json
    copy.json
    copy.validated.json
@@ -39,17 +40,21 @@ V1 不包含独立 Web Demo、外部 API、联网搜索、多品牌、多型号�
 ## 设计原则
 
 - 产品功能只来自内置资料库，视觉分析不推断规格。
+- 新输入先经过图片事实提取、官方优先检索和声明级核验，再进入文案与生图。
+- 每条卖点必须引用已验证来源；搜索摘要、相邻型号和用户场景偏好不能成为功能证据。
 - 场景图不生成中文，文字由 Pillow 确定性排版。
 - 型号只能精确匹配或命中显式别名。
 - 产品一致性编辑最多重试一次，随后采用可审计回退。
 - 图像生成使用宿主内置能力，不需要 `OPENAI_API_KEY`。
+- 产品建议占画面宽度 20%～30%，小于 18% 会被排版流程拒绝。
+- 刷脸动作由人物朝向和屏幕取景关系表达；中文识别状态由本地脚本稳定叠加。
 
 ## 已验证样例
 
 - 输入：[D5 Ultra 商品主图](assets/sample_input/d5-ultra-product.webp)
-- 输出：[D5 Ultra 企业入口海报](assets/sample_output/d5-ultra-enterprise-entry-poster.png)
+- 输出：[D5 Ultra 企业入口海报 V2](assets/sample_output/d5-ultra-enterprise-entry-poster-v2.png)
 
-该样例只宣传用户提供图片可直接支持的内容；它不替代官方参数资料。
+该样例只宣传官网产品目录与用户图片直接支持的内容；经销商和媒体页面仅作发现线索，未用于支撑参数型声明。
 
 ## 本地验证
 
@@ -65,7 +70,7 @@ python -m compileall scripts tests
 V1 只允许一个启用型号。更新资料时：
 
 1. 保留原始型号拼写，只把真实可接受的写法加入 `aliases`。
-2. 每条卖点必须能对应到已提供资料。
+2. 每条卖点必须通过 `source_ids` 对应到已验证资料。
 3. 把夸大或未经确认的词句写入 `prohibited_claims`。
 4. 在人工复核完成前保持 `enabled: false`。
 5. 启用后运行完整测试和一个真实端到端样例。

@@ -9,6 +9,8 @@
       "expectations": [
         "先查看产品图片并创建结构化 analysis.json",
         "最终品牌严格为魔点门禁，卖点为 3～4 条",
+        "产品宽度至少占画面 18%，缩略查看仍能辨认屏幕和传感器",
+        "人物明确朝向设备，形成正在刷脸的动作关系",
         "场景主视觉无文字，最终文字由 compose_poster.py 排版",
         "verify_output.py 返回 valid true"
       ]

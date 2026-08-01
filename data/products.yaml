@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "catalog_policy": "V1 只允许一个 enabled=true 的已验证型号",
+  "schema_version": 2,
+  "catalog_policy": "V1 只允许一个 enabled=true 的已验证型号；每条卖点必须引用已验证来源",
   "products": [
     {
       "model": "D5 Ultra",
@@ -17,17 +17,20 @@
         {
           "id": "face-recognition",
           "text": "智能人脸识别通行",
-          "verified": true
+          "verified": true,
+          "source_ids": ["official-product-index", "user-product-image"]
         },
         {
           "id": "attendance-access",
           "text": "考勤门禁一体化",
-          "verified": true
+          "verified": true,
+          "source_ids": ["official-product-index", "user-product-image"]
         },
         {
           "id": "visual-screen",
           "text": "前置可视化显示屏",
-          "verified": true
+          "verified": true,
+          "source_ids": ["user-product-image"]
         }
       ],
       "recommended_scenes": ["企业办公入口", "企业前台"],
@@ -35,14 +38,27 @@
         "绝对零误识",
         "100%准确",
         "行业第一",
-        "千人千面",
         "无感通行",
         "极速识别"
       ],
       "sources": [
         {
-          "label": "用户提供的商品主图：可见“D5 Ultra 智能人脸考勤门禁机”及产品正面外观",
-          "status": "verified"
+          "id": "official-product-index",
+          "type": "official",
+          "label": "魔点科技官网产品大全：D5 Ultra 智能人脸考勤门禁机",
+          "url": "https://www.moredian.com/products/all",
+          "status": "verified",
+          "verified_at": "2026-08-01",
+          "supports": ["产品型号", "产品类别", "人脸考勤门禁定位"]
+        },
+        {
+          "id": "user-product-image",
+          "type": "user_provided",
+          "label": "用户提供的 D5 Ultra 商品主图",
+          "path": "assets/sample_input/d5-ultra-product.webp",
+          "status": "verified",
+          "verified_at": "2026-08-01",
+          "supports": ["产品型号", "产品类别", "前置显示屏", "正面外观特征"]
         }
       ]
     }

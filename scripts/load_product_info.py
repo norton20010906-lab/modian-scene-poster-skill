@@ -17,6 +17,15 @@ class ProductCatalogError(ValueError):
     """Raised when the requested model is not safely usable."""
 
 
+ALLOWED_SOURCE_TYPES = {
+    "official",
+    "official_partner",
+    "user_provided",
+    "reseller",
+    "media",
+}
+
+
 def _match_key(value: str) -> str:
     return " ".join(value.split()).casefold()
 
@@ -37,6 +46,27 @@ def _validate_product(product: dict[str, Any]) -> None:
             "型号资料不完整，缺少：" + "、".join(missing)
         )
 
+    verified_sources: dict[str, dict[str, Any]] = {}
+    for source in product["sources"]:
+        if not isinstance(source, dict) or source.get("status") != "verified":
+            continue
+        source_id = source.get("id")
+        has_locator = bool(source.get("url") or source.get("path"))
+        if (
+            not isinstance(source_id, str)
+            or not source_id.strip()
+            or source.get("type") not in ALLOWED_SOURCE_TYPES
+            or not source.get("label")
+            or not source.get("verified_at")
+            or not has_locator
+        ):
+            raise ProductCatalogError("已验证来源缺少 ID、类型、标签、定位地址或核验元数据")
+        if source_id in verified_sources:
+            raise ProductCatalogError(f"资料来源 ID 重复：{source_id}")
+        verified_sources[source_id] = source
+    if not verified_sources:
+        raise ProductCatalogError("型号缺少带 ID 的已验证资料来源")
+
     verified_points = [
         item
         for item in product["selling_points"]
@@ -47,11 +77,19 @@ def _validate_product(product: dict[str, Any]) -> None:
     ]
     if len(verified_points) < 3:
         raise ProductCatalogError("型号至少需要 3 条已验证卖点")
-    if not any(
-        isinstance(source, dict) and source.get("status") == "verified"
-        for source in product["sources"]
-    ):
-        raise ProductCatalogError("型号缺少已验证的资料来源")
+    for point in verified_points:
+        source_ids = point.get("source_ids")
+        if (
+            not isinstance(source_ids, list)
+            or not source_ids
+            or not all(isinstance(source_id, str) and source_id for source_id in source_ids)
+        ):
+            raise ProductCatalogError(f"卖点 {point['id']} 缺少来源 ID")
+        unknown = [source_id for source_id in source_ids if source_id not in verified_sources]
+        if unknown:
+            raise ProductCatalogError(
+                f"卖点 {point['id']} 引用了未验证或不存在的来源：{'、'.join(unknown)}"
+            )
 
 
 def load_product(catalog_path: str | Path, requested_model: str) -> dict[str, Any]:
@@ -94,4 +132,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

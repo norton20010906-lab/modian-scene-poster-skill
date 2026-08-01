@@ -25,13 +25,22 @@ class ProductCatalogTests(unittest.TestCase):
                             "category": "刷脸门禁机",
                             "verified_features": ["人脸识别", "门禁通行"],
                             "selling_points": [
-                                {"id": "face", "text": "刷脸快速通行", "verified": True},
-                                {"id": "entry", "text": "适用于企业入口", "verified": True},
-                                {"id": "attendance", "text": "支持考勤管理", "verified": True},
+                                {"id": "face", "text": "刷脸快速通行", "verified": True, "source_ids": ["official-1"]},
+                                {"id": "entry", "text": "适用于企业入口", "verified": True, "source_ids": ["official-1"]},
+                                {"id": "attendance", "text": "支持考勤管理", "verified": True, "source_ids": ["official-1"]},
                             ],
                             "recommended_scenes": ["企业办公入口"],
                             "prohibited_claims": ["绝对零误识"],
-                            "sources": [{"label": "用户提供的官方资料", "status": "verified"}],
+                            "sources": [
+                                {
+                                    "id": "official-1",
+                                    "type": "official",
+                                    "label": "用户提供的官方资料",
+                                    "url": "https://example.com/product",
+                                    "status": "verified",
+                                    "verified_at": "2026-08-01",
+                                }
+                            ],
                         }
                     ],
                 },
@@ -56,6 +65,27 @@ class ProductCatalogTests(unittest.TestCase):
         data["products"][0]["enabled"] = False
         self.catalog.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         with self.assertRaisesRegex(ProductCatalogError, "尚未启用"):
+            load_product(self.catalog, "M1-PRO")
+
+    def test_selling_point_without_source_ids_is_rejected(self):
+        data = json.loads(self.catalog.read_text(encoding="utf-8"))
+        del data["products"][0]["selling_points"][0]["source_ids"]
+        self.catalog.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        with self.assertRaisesRegex(ProductCatalogError, "来源"):
+            load_product(self.catalog, "M1-PRO")
+
+    def test_selling_point_with_unknown_source_id_is_rejected(self):
+        data = json.loads(self.catalog.read_text(encoding="utf-8"))
+        data["products"][0]["selling_points"][0]["source_ids"] = ["missing"]
+        self.catalog.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        with self.assertRaisesRegex(ProductCatalogError, "来源"):
+            load_product(self.catalog, "M1-PRO")
+
+    def test_verified_source_without_audit_metadata_is_rejected(self):
+        data = json.loads(self.catalog.read_text(encoding="utf-8"))
+        del data["products"][0]["sources"][0]["verified_at"]
+        self.catalog.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        with self.assertRaisesRegex(ProductCatalogError, "核验元数据"):
             load_product(self.catalog, "M1-PRO")
 
     def test_bundled_d5_ultra_record_is_enabled_and_has_three_verified_points(self):
