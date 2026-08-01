@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "canvas": [1080, 1350],
+  "safe_margin": 72,
+  "title_zone": [72, 145, 1008, 430],
+  "selling_points_zone": [44, 968, 1036, 1304],
+  "notes": "V1 固定布局；实际绘制参数以 scripts/compose_poster.py 为准"
+}

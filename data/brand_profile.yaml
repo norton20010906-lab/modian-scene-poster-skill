@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "brand_name": "魔点门禁",
+  "language": "zh-CN",
+  "canvas": {
+    "width": 1080,
+    "height": 1350,
+    "format": "PNG",
+    "color_space": "sRGB"
+  },
+  "visual_direction": "真实企业建筑环境中的克制科技感",
+  "colors": {
+    "accent": "#58E6C0",
+    "text": "#FFFFFF",
+    "ink": "#071219"
+  },
+  "font_candidates": []
+}

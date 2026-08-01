@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "catalog_policy": "V1 只允许一个 enabled=true 的已验证型号",
+  "products": [
+    {
+      "model": "REPLACE_WITH_VERIFIED_MODEL",
+      "aliases": [],
+      "enabled": false,
+      "category": "刷脸门禁机",
+      "verified_features": [],
+      "selling_points": [],
+      "recommended_scenes": [],
+      "prohibited_claims": [
+        "绝对零误识",
+        "100%准确",
+        "行业第一"
+      ],
+      "sources": [
+        {
+          "label": "等待用户提供的官方或授权产品资料",
+          "status": "pending"
+        }
+      ]
+    }
+  ]
+}

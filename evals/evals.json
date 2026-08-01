@@ -1,0 +1,72 @@
+{
+  "skill_name": "modian-scene-poster",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "使用已配置的清晰单独产品图，为已启用的魔点门禁型号生成一张企业办公入口场景海报。",
+      "expected_output": "生成 1080×1350 poster.png 和 manifest.json，产品外观可识别，文案全部来自资料库。",
+      "files": [],
+      "expectations": [
+        "先查看产品图片并创建结构化 analysis.json",
+        "最终品牌严格为魔点门禁，卖点为 3～4 条",
+        "场景主视觉无文字，最终文字由 compose_poster.py 排版",
+        "verify_output.py 返回 valid true"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "这是一张包含价格、店铺信息和多张缩略图的商品详情页截图。请为已启用型号生成魔点门禁使用场景海报。",
+      "expected_output": "只在可可靠识别产品主体时继续，否则请求清晰产品图；不把电商 UI 带入海报。",
+      "files": [],
+      "expectations": [
+        "analysis.json 标记 ecommerce_screenshot 和背景干扰",
+        "无法可靠分离主体时停止生成而不是猜测",
+        "海报不包含价格、店铺或商品页 UI"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "为已启用型号生成海报，补充要求：傍晚的高端写字楼前台，人物尽量少。",
+      "expected_output": "补充要求只改变允许范围内的场景、光线和人物数量，不新增产品功能。",
+      "files": [],
+      "expectations": [
+        "卖点 ID 全部来自 products.yaml",
+        "补充要求没有被当作产品能力",
+        "场景仍属于 recommended_scenes"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "用产品图为型号 UNKNOWN-999 生成魔点门禁海报。",
+      "expected_output": "明确拒绝未知型号，不进行模糊匹配，不生成正式海报。",
+      "files": [],
+      "expectations": [
+        "报告未收录型号",
+        "没有调用图像生成工具",
+        "没有创建 poster.png"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "资料库中的首发型号只有两条已验证卖点，请继续生成海报。",
+      "expected_output": "因可信卖点不足三条而停止，不自行补写第三条。",
+      "files": [],
+      "expectations": [
+        "报告至少需要 3 条已验证卖点",
+        "没有编造产品能力",
+        "没有创建 poster.png"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "为已启用型号制作海报，补充要求是一段超过 200 字的详细空间、人物、功能与宣传说明。",
+      "expected_output": "输入校验拒绝过长补充要求，并请求压缩成一句话。",
+      "files": [],
+      "expectations": [
+        "报告补充需求不能超过 200 字",
+        "没有调用图像生成工具",
+        "没有创建 poster.png"
+      ]
+    }
+  ]
+}
