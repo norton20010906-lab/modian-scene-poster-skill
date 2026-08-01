@@ -28,6 +28,9 @@ class PosterCompositionError(ValueError):
     """Raised when the supplied assets cannot fit the V1 poster contract."""
 
 
+MIN_PRODUCT_WIDTH_RATIO = 0.18
+
+
 def _hex_color(value: str, fallback: str) -> tuple[int, int, int]:
     candidate = (value or fallback).lstrip("#")
     if len(candidate) != 6:
@@ -105,6 +108,70 @@ def _fit_font(
     raise PosterCompositionError(f"文案无法放入版面，请缩短：{text}")
 
 
+def _scene_product_box(
+    analysis: dict[str, Any], size: tuple[int, int]
+) -> tuple[tuple[int, int, int, int] | None, float | None]:
+    raw_box = analysis.get("scene_product_bbox_normalized")
+    if raw_box is None:
+        return None, None
+    if (
+        not isinstance(raw_box, list)
+        or len(raw_box) != 4
+        or not all(isinstance(value, (int, float)) for value in raw_box)
+    ):
+        raise PosterCompositionError("scene_product_bbox_normalized 必须包含 4 个数字")
+    x1, y1, x2, y2 = (float(value) for value in raw_box)
+    if not (0 <= x1 < x2 <= 1 and 0 <= y1 < y2 <= 1):
+        raise PosterCompositionError("产品主体坐标必须位于 0～1 范围内")
+    width_ratio = x2 - x1
+    if width_ratio < MIN_PRODUCT_WIDTH_RATIO:
+        raise PosterCompositionError(
+            f"产品主体宽度仅占画面 {width_ratio:.0%}，必须至少占 {MIN_PRODUCT_WIDTH_RATIO:.0%}"
+        )
+    return (
+        (
+            round(x1 * size[0]),
+            round(y1 * size[1]),
+            round(x2 * size[0]),
+            round(y2 * size[1]),
+        ),
+        width_ratio,
+    )
+
+
+def _draw_status_badge(
+    draw: ImageDraw.ImageDraw,
+    label: str,
+    product_box: tuple[int, int, int, int],
+    brand: dict[str, Any],
+    color: tuple[int, int, int],
+    canvas_size: tuple[int, int],
+) -> None:
+    font = _font(brand, 28, True)
+    text_box = draw.textbbox((0, 0), label, font=font)
+    text_width = text_box[2] - text_box[0]
+    text_height = text_box[3] - text_box[1]
+    badge_width = text_width + 52
+    badge_height = text_height + 28
+    center_x = (product_box[0] + product_box[2]) // 2
+    x1 = max(54, min(center_x - badge_width // 2, canvas_size[0] - badge_width - 54))
+    y1 = max(430, product_box[1] - badge_height - 30)
+    x2 = x1 + badge_width
+    y2 = y1 + badge_height
+    draw.rounded_rectangle((x1, y1, x2, y2), radius=badge_height // 2, fill=(*color, 245))
+    pointer_x = max(x1 + 30, min(center_x, x2 - 30))
+    draw.polygon(
+        [(pointer_x - 10, y2 - 1), (pointer_x + 12, y2 - 1), (pointer_x + 6, y2 + 14)],
+        fill=(*color, 245),
+    )
+    draw.text(
+        (x1 + 26, y1 + (badge_height - text_height) // 2 - text_box[1]),
+        label,
+        font=font,
+        fill=(255, 255, 255),
+    )
+
+
 def compose_poster(
     background_path: str | Path,
     content_path: str | Path,
@@ -131,6 +198,7 @@ def compose_poster(
     selling_points = content.get("selling_points", [])
     if not isinstance(selling_points, list) or not 3 <= len(selling_points) <= 4:
         raise PosterCompositionError("最终文案必须包含 3～4 条卖点")
+    product_box, product_width_ratio = _scene_product_box(analysis, size)
 
     with Image.open(background) as source:
         canvas = _cover(source, size).convert("RGBA")
@@ -161,6 +229,14 @@ def compose_poster(
     subtitle = str(content.get("subtitle", ""))
     subtitle_font = _fit_font(draw, subtitle, brand, right - left, 30, 22)
     draw.text((left, subtitle_y), subtitle, font=subtitle_font, fill=(*text_color, 220))
+
+    status_badge = str(content.get("status_badge", "")).strip()
+    status_badge_drawn = bool(status_badge and product_box)
+    if status_badge and product_box is None:
+        raise PosterCompositionError("绘制状态标签前必须提供场景中的产品主体坐标")
+    if status_badge_drawn:
+        status_color = _hex_color(colors.get("status", "#159BFF"), "#159BFF")
+        _draw_status_badge(draw, status_badge, product_box, brand, status_color, size)
 
     panel_top = 1012 if len(selling_points) == 3 else 968
     draw.rounded_rectangle(
@@ -195,12 +271,19 @@ def compose_poster(
         "scene": content.get("scene", "企业办公入口"),
         "selling_point_ids": content.get("selling_point_ids", []),
         "fallback_used": bool(analysis.get("fallback_used", False)),
+        "status_badge": status_badge or None,
         "product_analysis_confidence": analysis.get("confidence"),
         "assets": {
             "background": str(background.resolve()),
             "poster": str(output.resolve()),
         },
-        "layout": {"width": size[0], "height": size[1], "text_overflow": False},
+        "layout": {
+            "width": size[0],
+            "height": size[1],
+            "text_overflow": False,
+            "status_badge_drawn": status_badge_drawn,
+            "product_width_ratio": product_width_ratio,
+        },
     }
     manifest_path.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

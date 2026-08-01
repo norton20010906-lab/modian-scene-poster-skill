@@ -18,6 +18,7 @@ except ImportError:
 BRAND_NAME = "魔点门禁"
 TITLE_MAX = 24
 SUBTITLE_MAX = 40
+ALLOWED_STATUS_BADGES = {"识别成功", "打卡成功", "欢迎通行"}
 
 
 class ContentValidationError(ValueError):
@@ -43,6 +44,12 @@ def validate_content(
     scene = str(content.get("scene") or (allowed_scenes[0] if allowed_scenes else ""))
     if not scene or scene not in allowed_scenes:
         raise ContentValidationError("使用场景必须来自产品资料库")
+
+    status_badge = str(content.get("status_badge", "")).strip()
+    if status_badge and status_badge not in ALLOWED_STATUS_BADGES:
+        raise ContentValidationError(
+            "状态标签只能使用：" + "、".join(sorted(ALLOWED_STATUS_BADGES))
+        )
 
     ids = content.get("selling_point_ids")
     if not isinstance(ids, list) or not 3 <= len(ids) <= 4:
@@ -74,7 +81,7 @@ def validate_content(
             "文案包含禁用表述：" + "、".join(prohibited)
         )
 
-    return {
+    result = {
         "brand": BRAND_NAME,
         "model": product["model"],
         "title": title,
@@ -83,6 +90,9 @@ def validate_content(
         "selling_point_ids": ids,
         "selling_points": [verified[item_id] for item_id in ids],
     }
+    if status_badge:
+        result["status_badge"] = status_badge
+    return result
 
 
 def main() -> None:

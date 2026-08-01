@@ -109,11 +109,26 @@ class ContentValidationTests(unittest.TestCase):
             "title": "让通行更从容",
             "subtitle": "面向企业入口的智能通行体验",
             "scene": "企业前台",
+            "status_badge": "识别成功",
             "selling_point_ids": ["face", "entry", "attendance"],
         }
         result = validate_content(content, self.product)
         self.assertEqual(result["selling_points"][0], "刷脸快速通行")
         self.assertEqual(result["scene"], "企业前台")
+        self.assertEqual(result["status_badge"], "识别成功")
+
+    def test_unknown_status_badge_is_rejected(self):
+        content = {
+            "brand": "魔点门禁",
+            "model": "M1-PRO",
+            "title": "让通行更从容",
+            "subtitle": "面向企业入口的智能通行体验",
+            "scene": "企业办公入口",
+            "status_badge": "百分百识别成功",
+            "selling_point_ids": ["face", "entry", "attendance"],
+        }
+        with self.assertRaisesRegex(ContentValidationError, "状态标签"):
+            validate_content(content, self.product)
 
     def test_scene_outside_product_catalog_is_rejected(self):
         content = {

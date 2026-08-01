@@ -11,6 +11,7 @@
   "visual_direction": "真实企业建筑环境中的克制科技感",
   "colors": {
     "accent": "#58E6C0",
+    "status": "#159BFF",
     "text": "#FFFFFF",
     "ink": "#071219"
   },
