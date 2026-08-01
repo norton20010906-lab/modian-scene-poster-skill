@@ -80,6 +80,29 @@
         "展示 P3 单张绝对路径",
         "不重新运行四候选流程"
       ]
+    },
+    {
+      "id": 8,
+      "prompt": "生成四宫格候选并告诉我怎么选择。",
+      "expected_output": "明确说明左上 1、右上 2、左下 3 来自模板库，右下 4 是本轮探索稿，并提示回复编号放大。",
+      "files": [],
+      "expectations": [
+        "candidate_manifest.json 将前三项标记为 library、第四项标记为 exploration",
+        "不会把 P4 伪装成已入库模板",
+        "提示用户认可 P4 时可明确要求加入模板库"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "P4 排版不错，把它加入模板库，以后可以轮换使用。",
+      "expected_output": "抽象 P4 的可复用规则，记录明确认可证据，生成待审核模板注册表；不把具体产品文案写死进模板。",
+      "files": [],
+      "expectations": [
+        "读取 template_promotion_workflow.md",
+        "layout_recipe 包含构图、文字层级、产品位置和提示词规则",
+        "晋升后状态为 approved、来源为 experimental_promotion",
+        "以后只在 P1 至 P3 成熟位中轮换，新的 P4 仍保持探索属性"
+      ]
     }
   ]
 }

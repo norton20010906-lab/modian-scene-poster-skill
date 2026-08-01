@@ -1,7 +1,6 @@
 ---
 name: modian-scene-poster
 description: 为魔点门禁刷脸门禁机生成中文产品使用场景海报。只要用户提供产品图片或商品截图、产品型号，并要求门禁海报、刷脸门禁场景图、魔点产品宣传图或类似营销视觉，就应使用本 Skill；它会收集并分级核验产品证据、分析外观、从可信资料库提炼卖点、用内置图像生成能力制作无字场景，再以本地脚本确定性排版。不要用于其他品牌、视频、通用修图或未经核验的型号。
-compatibility: Requires image viewing, built-in image generation, Python 3.10+, and Pillow. Read-only web search is recommended for evidence refresh; no external model API key.
 ---
 
 # 魔点门禁产品场景海报
@@ -74,14 +73,15 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 
 后续仅使用 `copy.validated.json`。
 
-### 4. 从内部版式库规划四个候选
+### 4. 规划“3 个成熟模板 + 1 个探索稿”
 
 读取 `data/layout_templates.yaml` 和 `references/template_selection_workflow.md`。版式库是 Skill 的内部积累，不是生成前展示给用户的风格商城：
 
-- 根据场景、卖点数量、图片质量和产品外形匹配内部模板。
-- 默认生成 P1～P4 四个候选；同一主视觉可被兼容模板复用。
+- P1（左上）、P2（右上）、P3（左下）从 `status: approved` 的成熟模板池中选择。根据场景、卖点数量、图片质量、产品外形和 `best_for` 匹配，并尽量选择三个不同构图家族。
+- P4（右下）是本轮新探索稿，必须基于参考案例和商业排版规律形成新的版式假设，不能直接复用成熟模板或只换颜色。
+- 四个候选共用同一份已验证事实和文案语义；同一主视觉可被兼容模板复用。
 - 模板只规定信息层级、产品占比、场景窗口和排版约束，不规定产品功能事实。
-- 新模板必须有明确适用条件、通过自动检查和人工样例复核后才能加入默认候选。
+- P4 默认不入库。只有用户明确表示认可并要求加入模板库后，才按 `references/template_promotion_workflow.md` 抽象、验证并晋升；晋升后可在未来轮换进 P1～P3。
 
 ### 5. 生成无字场景主视觉
 
@@ -97,7 +97,7 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 - 无生成文字、无虚构 Logo、无水印、无功能图标；识别状态由排版脚本后加
 - 保留 `analysis.json` 中列出的关键外观特征
 
-根据模板注册表准备所需主视觉，并复制到运行目录 `scenes/`。项目资产不能只留在宿主默认生成目录。P1/P2 可复用同一张宽幅刷脸场景；P3 使用产品极近景；P4 使用不对称产品主视觉。每种不同主视觉单独调用一次图像生成，不用一次调用伪装批量变体。
+根据本轮三个成熟模板和一个探索方案准备所需主视觉，并复制到运行目录 `scenes/`。项目资产不能只留在宿主默认生成目录。兼容版式可复用同一张主视觉；近景版式使用产品特写；P4 的资产服从本轮新构图方案。每种不同主视觉单独调用一次图像生成，不用一次调用伪装批量变体。
 
 ### 6. 检查产品一致性
 
@@ -111,7 +111,7 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 
 ### 7. 合成四个候选
 
-P1 使用已固化的黑底功能编排：
+P1～P3 使用本轮选中的成熟模板渲染器。以下命令仅是当前库中 `editorial-feature-grid` 的示例：
 
 ```text
 python <SKILL_ROOT>/scripts/compose_reference_poster.py \
@@ -122,7 +122,7 @@ python <SKILL_ROOT>/scripts/compose_reference_poster.py \
   --output <运行目录>/p1/poster.png
 ```
 
-P2～P4 使用 `compose_candidate_set.py` 的 `p2`、`p3`、`p4` 子命令。四张成品分别写入 `p1/poster.png` 至 `p4/poster.png`，然后运行：
+其他成熟模板使用注册表指定的渲染器；P4 使用本轮探索实现。四张成品分别写入 `p1/poster.png` 至 `p4/poster.png`，然后运行并显式记录前三个成熟模板 ID 与一个 `experimental:<id>`：
 
 ```text
 python <SKILL_ROOT>/scripts/compose_candidate_set.py contact \
@@ -130,6 +130,10 @@ python <SKILL_ROOT>/scripts/compose_candidate_set.py contact \
   --poster <运行目录>/p2/poster.png \
   --poster <运行目录>/p3/poster.png \
   --poster <运行目录>/p4/poster.png \
+  --template-id <P1成熟模板ID> \
+  --template-id <P2成熟模板ID> \
+  --template-id <P3成熟模板ID> \
+  --template-id experimental:<P4探索ID> \
   --output <运行目录>/contact-sheet.png
 ```
 
@@ -150,7 +154,9 @@ python <SKILL_ROOT>/scripts/verify_output.py \
 
 分别检查四张海报，再用 `view_image` 检查四宫格并逐项执行 `references/quality_checklist.md`。自动校验或人工视觉检查任一失败，都不要把该候选放入四宫格。
 
-展示 `contact-sheet.png` 后暂停，要求用户回复 P1、P2、P3 或 P4。用户选择后，展示对应的原始 1080×1350 文件；如需进一步调整，只修改选中模板，不重新生成其余三个候选。
+展示 `contact-sheet.png` 后明确提示：“左上 1、右上 2、左下 3 来自模板库；右下 4 是本次新探索。回复 1/2/3/4 选择放大；若 4 的排版值得复用，可回复‘4，加入模板库’。”用户选择后，展示对应的原始 1080×1350 文件；如需进一步调整，只修改选中候选，不重新生成其余三个。
+
+选择 P4 不等于允许入库。只有出现“加入模板库”“以后复用”等明确授权时，才读取 `references/template_promotion_workflow.md`，生成去产品化的模板配方并运行 `scripts/promote_layout_template.py`。普通选择 P1～P3 或只要求放大时，不修改模板库。
 
 ## 输出
 
@@ -159,7 +165,8 @@ python <SKILL_ROOT>/scripts/verify_output.py \
 - `contact-sheet.png` 的绝对路径
 - P1～P4 单张文件的绝对路径
 - `candidate_manifest.json` 的绝对路径
-- 提示用户回复一个候选编号进行单张放大
+- 说明位置编号、P1～P3 的成熟模板来源、P4 的探索属性，并提示回复一个编号进行单张放大
+- 单独提示：认可 P4 时可明确要求加入模板库
 
 选择阶段再返回选中海报的绝对路径、模板 ID、型号、场景与回退状态。
 

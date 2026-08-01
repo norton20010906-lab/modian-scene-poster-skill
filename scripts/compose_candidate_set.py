@@ -31,22 +31,22 @@ except ImportError:
     from config_io import load_config
 
 
-TEMPLATE_IDS = {
-    "editorial-feature-grid",
-    "centered-story-window",
-    "product-closeup-overlay",
-    "asymmetric-campaign-hero",
-}
-
-
 def load_template_library(path: str | Path) -> dict[str, Any]:
     library = load_config(path)
     templates = library.get("templates")
-    defaults = library.get("candidate_defaults")
+    strategy = library.get("candidate_strategy")
     if library.get("internal_only") is not True:
         raise ValueError("版式库必须标记为 internal_only")
-    if not isinstance(templates, list) or not isinstance(defaults, list):
-        raise ValueError("版式库缺少 templates 或 candidate_defaults")
+    if not isinstance(templates, list) or not isinstance(strategy, dict):
+        raise ValueError("版式库缺少 templates 或 candidate_strategy")
+    if (
+        strategy.get("library_slots") != ["P1", "P2", "P3"]
+        or strategy.get("exploration_slot") != "P4"
+        or strategy.get("library_pick_count") != 3
+        or strategy.get("exploration_count") != 1
+        or not strategy.get("user_guidance")
+    ):
+        raise ValueError("候选四宫格必须遵循三个模板位加一个探索位")
     for template in templates:
         if not isinstance(template, dict):
             raise ValueError("模板元数据必须为对象")
@@ -57,6 +57,9 @@ def load_template_library(path: str | Path) -> dict[str, Any]:
             or not template.get("source")
             or not template.get("best_for")
             or not template.get("scene_asset")
+            or template.get("status") != "approved"
+            or not template.get("origin")
+            or not template.get("renderer")
             or not isinstance(target, list)
             or len(target) != 2
             or not all(isinstance(value, (int, float)) for value in target)
@@ -64,10 +67,8 @@ def load_template_library(path: str | Path) -> dict[str, Any]:
         ):
             raise ValueError("模板元数据缺少标签、来源、适用条件、主视觉或有效产品占比")
     ids = [template.get("id") for template in templates if isinstance(template, dict)]
-    if len(ids) < 4 or len(ids) != len(set(ids)) or not TEMPLATE_IDS.issubset(ids):
-        raise ValueError("版式库必须包含四个核心模板，且所有模板 ID 唯一")
-    if len(defaults) != 4 or len(set(defaults)) != 4 or not set(defaults).issubset(ids):
-        raise ValueError("四宫格默认候选必须引用四个不同的已收录模板")
+    if len(ids) < 3 or len(ids) != len(set(ids)):
+        raise ValueError("版式库必须包含至少三个 ID 唯一的成熟模板")
     return library
 
 
@@ -248,18 +249,24 @@ def build_contact_sheet(
         "editorial-feature-grid",
         "centered-story-window",
         "product-closeup-overlay",
-        "asymmetric-campaign-hero",
+        "experimental:new-layout",
     ))
     if len(template_order) != 4 or len(set(template_order)) != 4:
         raise ValueError("四宫格必须记录 4 个不同的模板 ID")
+    if any(template_id.startswith("experimental:") for template_id in template_order[:3]):
+        raise ValueError("P1～P3 必须来自成熟模板库，不能标记为 experimental")
+    if not template_order[3].startswith("experimental:"):
+        raise ValueError("P4 必须使用 experimental:<id> 标记为本轮探索稿")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "selection_status": "awaiting_user_selection",
         "contact_sheet": str(output),
+        "user_guidance": "左上为 1、右上为 2、左下为 3、右下为 4；1、2、3 来自模板库，4 是本次新探索稿。回复编号选择；若 4 满意，可明确要求加入模板库。",
         "candidates": [
             {
                 "selection_key": f"P{index + 1}",
                 "template_id": template_order[index],
+                "source_type": "library" if index < 3 else "exploration",
                 "poster": str(Path(poster).resolve()),
             }
             for index, poster in enumerate(posters)

@@ -1,45 +1,25 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "internal_only": true,
-  "selection_policy": "Skill 根据产品、场景和素材质量选择最多四个内部模板生成候选；用户只在候选生成后选择放大，不在生成前浏览模板菜单。",
-  "candidate_defaults": [
-    "editorial-feature-grid",
-    "centered-story-window",
-    "product-closeup-overlay",
-    "asymmetric-campaign-hero"
-  ],
+  "candidate_strategy": {
+    "library_slots": ["P1", "P2", "P3"],
+    "exploration_slot": "P4",
+    "library_pick_count": 3,
+    "exploration_count": 1,
+    "user_guidance": "左上为 1、右上为 2、左下为 3、右下为 4。1、2、3 来自模板库，4 是本次新探索稿。回复编号选择放大；若 4 满意，可明确回复‘4，加入模板库’。"
+  },
+  "rotation_policy": {
+    "method": "match_then_diversify",
+    "approved_status": "approved",
+    "rules": ["按场景素材类型和产品展示目标匹配", "选择三个构图家族不同的成熟模板", "避免连续运行重复完全相同的前三位组合", "P4 始终为本轮新探索，不从成熟模板池抽取"]
+  },
   "templates": [
+    {"id":"editorial-feature-grid","label":"P1 黑底功能编排","source":"用户参考 P1","best_for":["三个并列卖点","真实刷脸场景","产品功能长图"],"product_width_target":[0.20,0.30],"scene_asset":"wide_interaction","status":"approved","origin":"user_reference","renderer":"scripts/compose_reference_poster.py"},
+    {"id":"centered-story-window","label":"P2 居中叙事窗口","source":"用户参考 P2","best_for":["一句核心主张","场景说明","企业入口"],"product_width_target":[0.20,0.30],"scene_asset":"wide_interaction","status":"approved","origin":"user_reference","renderer":"scripts/compose_candidate_set.py:p2"},
+    {"id":"product-closeup-overlay","label":"P3 产品极近景","source":"用户参考 P3","best_for":["突出硬件外观","屏幕识别反馈","单一功能特写"],"product_width_target":[0.55,0.70],"scene_asset":"closeup_recognition","status":"approved","origin":"user_reference","renderer":"scripts/compose_candidate_set.py:p3"},
     {
-      "id": "editorial-feature-grid",
-      "label": "P1 黑底功能编排",
-      "source": "用户参考 P1",
-      "best_for": ["三个并列卖点", "真实刷脸场景", "产品功能长图"],
-      "product_width_target": [0.20, 0.30],
-      "scene_asset": "wide_interaction"
-    },
-    {
-      "id": "centered-story-window",
-      "label": "P2 居中叙事窗口",
-      "source": "用户参考 P2",
-      "best_for": ["一句核心主张", "场景说明", "企业入口"],
-      "product_width_target": [0.20, 0.30],
-      "scene_asset": "wide_interaction"
-    },
-    {
-      "id": "product-closeup-overlay",
-      "label": "P3 产品极近景",
-      "source": "用户参考 P3",
-      "best_for": ["突出硬件外观", "屏幕识别反馈", "单一功能特写"],
-      "product_width_target": [0.55, 0.70],
-      "scene_asset": "closeup_recognition"
-    },
-    {
-      "id": "asymmetric-campaign-hero",
-      "label": "P4 不对称商业主视觉",
-      "source": "商业产品海报规律抽象",
-      "best_for": ["产品质感", "品牌主视觉", "高端科技表达"],
-      "product_width_target": [0.40, 0.55],
-      "scene_asset": "cinematic_product_hero"
+      "id":"asymmetric-campaign-hero","label":"不对称商业主视觉","source":"D5 Ultra 四宫格 P4，经用户明确认可","best_for":["产品质感","品牌主视觉","高端科技表达"],"product_width_target":[0.40,0.55],"scene_asset":"cinematic_product_hero","status":"approved","origin":"experimental_promotion","renderer":"scripts/compose_candidate_set.py:p4","recipe_reference":"references/promotions/asymmetric-campaign-hero.json","promoted_at":"2026-08-01",
+      "promotion_evidence":{"user_approved":true,"run_id":"d5-ultra-candidates-20260801-01","selection_key":"P4","sample_path":"assets/sample_output/d5-ultra-four-candidate-sheet.png"}
     }
   ]
 }

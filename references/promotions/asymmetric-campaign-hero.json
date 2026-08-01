@@ -1,0 +1,22 @@
+{
+  "id": "asymmetric-campaign-hero",
+  "label": "不对称商业主视觉",
+  "source": "D5 Ultra 四宫格 P4，经用户明确认可",
+  "best_for": ["产品质感", "品牌主视觉", "高端科技表达"],
+  "product_width_target": [0.40, 0.55],
+  "scene_asset": "cinematic_product_hero",
+  "renderer": "scripts/compose_candidate_set.py:p4",
+  "layout_recipe": {
+    "composition": "左侧标题与说明形成窄信息轴，右侧以大比例产品和人物交互构成主视觉，底部纵向排列卖点。",
+    "text_hierarchy": "品牌与型号最小，标题最大且允许两行，副标题次级，三条卖点使用编号建立节奏；所有文字均为运行时槽位。",
+    "product_placement": "产品位于画面右侧视觉焦点，占画布宽度 40% 至 55%，屏幕和传感器不可被人物、状态标签或文字遮挡。",
+    "prompt_guidance": "生成克制的企业科技场景，保留左侧低细节负空间，右侧近景呈现人物朝向设备刷脸，设备轮廓、屏幕、摄像头和真实标识清晰，不生成任何文字。"
+  },
+  "promotion_evidence": {
+    "user_approved": true,
+    "run_id": "d5-ultra-candidates-20260801-01",
+    "selection_key": "P4",
+    "sample_path": "assets/sample_output/d5-ultra-four-candidate-sheet.png",
+    "approved_at": "2026-08-01"
+  }
+}
