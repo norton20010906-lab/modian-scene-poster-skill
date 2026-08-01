@@ -1,6 +1,6 @@
 # 魔点门禁产品场景海报 Skill
 
-[![validate-skill](https://github.com/OWNER/modian-scene-poster-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/modian-scene-poster-skill/actions/workflows/ci.yml)
+[![validate-skill](https://github.com/norton20010906-lab/modian-scene-poster-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/norton20010906-lab/modian-scene-poster-skill/actions/workflows/ci.yml)
 
 把产品图片和型号交给 WorkBuddy、Codex 等具备视觉理解、图片生成和本地脚本能力的 Agent，生成四张 1080×1350 中文门禁使用场景海报候选：前三张来自成熟模板库，第四张探索一种新排版。
 
@@ -14,13 +14,13 @@ V1 只支持品牌“魔点门禁”和型号 `D5 Ultra`，不对未知型号做
 
 ```text
 请安装并启用这个 Skill：
-https://github.com/OWNER/modian-scene-poster-skill
+https://github.com/norton20010906-lab/modian-scene-poster-skill
 ```
 
 如果当前版本无法直接从地址安装，手动克隆到用户 Skill 目录：
 
 ```bash
-git clone https://github.com/OWNER/modian-scene-poster-skill.git ~/.workbuddy/skills/modian-scene-poster
+git clone https://github.com/norton20010906-lab/modian-scene-poster-skill.git ~/.workbuddy/skills/modian-scene-poster
 ```
 
 重载 WorkBuddy Skills 后，在对话中上传产品图片并输入：
