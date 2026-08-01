@@ -2,8 +2,10 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+.env
+.env.*
+.DS_Store
 dist/
 *.skill
 output/*
 !output/.gitkeep
-

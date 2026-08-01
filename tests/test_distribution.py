@@ -68,7 +68,7 @@ class RepositoryAuditTests(unittest.TestCase):
             catalog_path = root / "data" / "products.yaml"
             data = json.loads(catalog_path.read_text(encoding="utf-8"))
             data["products"][0]["sources"][0]["path"] = (
-                "C:/Users/Administrator/AppData/Local/Temp/product.png"
+                "C:" + "/Users/Administrator/AppData/Local/Temp/product.png"
             )
             catalog_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
             result = audit_repository(root, allowed_models={"D5 Ultra"})

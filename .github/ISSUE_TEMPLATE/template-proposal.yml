@@ -1,0 +1,26 @@
+name: 新模板提案
+description: 提交经过用户认可的 P4 版式，供模板库审核
+title: "[Template] "
+labels: ["template-proposal"]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: 适用场景
+      description: 说明该版式最适合表达什么产品和场景。
+    validations:
+      required: true
+  - type: textarea
+    id: recipe
+    attributes:
+      label: 可复用配方
+      description: 说明构图、文字层级、产品位置、产品占比和主视觉提示规则。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 认可与验证证据
+      description: 提供 P4 运行 ID、用户认可说明、样例路径及短/长文案验证结果。
+    validations:
+      required: true

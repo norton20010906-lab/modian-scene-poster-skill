@@ -1,6 +1,6 @@
 ---
 name: modian-scene-poster
-description: 为魔点门禁刷脸门禁机生成中文产品使用场景海报。只要用户提供产品图片或商品截图、产品型号，并要求门禁海报、刷脸门禁场景图、魔点产品宣传图或类似营销视觉，就应使用本 Skill；它会收集并分级核验产品证据、分析外观、从可信资料库提炼卖点、用内置图像生成能力制作无字场景，再以本地脚本确定性排版。不要用于其他品牌、视频、通用修图或未经核验的型号。
+description: 为魔点门禁 D5 Ultra 刷脸门禁机生成中文产品使用场景海报。只要用户提供产品图片或商品截图、产品型号，并要求门禁海报、刷脸门禁场景图、魔点产品宣传图或类似营销视觉，就应使用本 Skill；它会核验运行环境、分析外观、从可信资料库提炼卖点、用宿主图片生成能力制作无字场景，再以本地脚本确定性排版。不要用于其他品牌、视频、通用修图或未经核验的型号。
 ---
 
 # 魔点门禁产品场景海报
@@ -19,9 +19,23 @@ description: 为魔点门禁刷脸门禁机生成中文产品使用场景海报�
 
 ## 准备
 
-把本文件所在目录记为 `SKILL_ROOT`。为本次运行创建 `output/<UTC时间戳>/`，后续中间文件都写入该目录，不覆盖旧结果。
+把本文件所在目录记为 `SKILL_ROOT`，把用户当前选择的工作空间记为 `WORKSPACE_ROOT`。为本次运行创建 `WORKSPACE_ROOT/output/<UTC时间戳>/`，后续中间文件都写入该目录，不覆盖旧结果，也不要写入 Skill 安装目录。
 
-先运行：
+先确认宿主具备“图片理解”和“图片生成”两项能力，不依赖某个产品专属的工具名称。然后运行：
+
+```text
+python <SKILL_ROOT>/scripts/preflight.py \
+  --workspace <WORKSPACE_ROOT> \
+  --catalog <SKILL_ROOT>/data/products.yaml \
+  --templates <SKILL_ROOT>/data/layout_templates.yaml \
+  --model <型号> \
+  --host-capability vision \
+  --host-capability image-generation
+```
+
+预检缺少 Pillow 时，向用户说明它仅用于本地中文排版，并在获得许可后运行 `python -m pip install -r <SKILL_ROOT>/requirements.txt`，随后重跑预检。缺少图片理解或图片生成能力时停止正式生成；可以保留已经完成的分析或文案，但不得把草图称为最终海报。
+
+预检通过后运行：
 
 ```text
 python <SKILL_ROOT>/scripts/validate_input.py --image <图片> --model <型号> --requirement <补充需求>
@@ -34,7 +48,7 @@ python <SKILL_ROOT>/scripts/load_product_info.py --catalog <SKILL_ROOT>/data/pro
 
 ### 1. 检查输入图片
 
-如果图片位于本地文件系统，先用 `view_image` 查看，使图片进入当前对话视觉上下文。按 `references/visual_analysis_schema.md` 生成 `analysis.json`。
+使用宿主的图片查看或视觉理解能力检查本地图片，使其进入当前对话视觉上下文。不要依赖固定工具名。按 `references/visual_analysis_schema.md` 生成 `analysis.json`。
 
 只记录可见外观：机身形状、颜色、屏幕、摄像头、边框、安装朝向、遮挡和背景干扰。不要从外观推断识别速度、容量、协议、考勤或其他规格。
 
@@ -85,7 +99,7 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 
 ### 5. 生成无字场景主视觉
 
-读取 `references/product_prominence_rules.md` 和 `references/image_prompt_template.md`，将产品图片标记为产品参考或编辑目标。使用宿主内置 `image_gen`，不要调用 CLI、SDK 或要求 API Key。
+读取 `references/product_prominence_rules.md` 和 `references/image_prompt_template.md`，将产品图片标记为产品参考或编辑目标。使用宿主内置图片生成能力，不要调用外部模型 CLI、SDK 或要求 API Key。
 
 生成要求：
 
@@ -101,7 +115,7 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 
 ### 6. 检查产品一致性
 
-用 `view_image` 查看 `scene.png`，逐项比较 `analysis.json.identity_anchors`：轮廓、屏幕比例、摄像头位置、主色和安装朝向。同时在 `analysis.json.scene_product_bbox_normalized` 记录场景中产品框 `[x1, y1, x2, y2]`；宽度不足 18% 时，即使场景真实也判定不合格。
+使用宿主的图片查看能力检查 `scene.png`，逐项比较 `analysis.json.identity_anchors`：轮廓、屏幕比例、摄像头位置、主色和安装朝向。同时在 `analysis.json.scene_product_bbox_normalized` 记录场景中产品框 `[x1, y1, x2, y2]`；宽度不足 18% 时，即使场景真实也判定不合格。
 
 - 合格：在 `analysis.json` 中记录 `fallback_used: false`。
 - 明显漂移：仅针对漂移项定向编辑一次，其他内容保持不变。
@@ -152,11 +166,11 @@ python <SKILL_ROOT>/scripts/verify_output.py \
   --catalog <SKILL_ROOT>/data/products.yaml
 ```
 
-分别检查四张海报，再用 `view_image` 检查四宫格并逐项执行 `references/quality_checklist.md`。自动校验或人工视觉检查任一失败，都不要把该候选放入四宫格。
+分别检查四张海报，再使用宿主的图片查看能力检查四宫格并逐项执行 `references/quality_checklist.md`。自动校验或人工视觉检查任一失败，都不要把该候选放入四宫格。
 
 展示 `contact-sheet.png` 后明确提示：“左上 1、右上 2、左下 3 来自模板库；右下 4 是本次新探索。回复 1/2/3/4 选择放大；若 4 的排版值得复用，可回复‘4，加入模板库’。”用户选择后，展示对应的原始 1080×1350 文件；如需进一步调整，只修改选中候选，不重新生成其余三个。
 
-选择 P4 不等于允许入库。只有出现“加入模板库”“以后复用”等明确授权时，才读取 `references/template_promotion_workflow.md`，生成去产品化的模板配方并运行 `scripts/promote_layout_template.py`。普通选择 P1～P3 或只要求放大时，不修改模板库。
+选择 P4 不等于允许入库。只有出现“加入模板库”“以后复用”等明确授权时，才读取 `references/template_promotion_workflow.md`，在本次工作空间生成去产品化的 `template_candidate.json`。已安装 Skill 的正式模板库不得就地修改；共享模板通过 GitHub Issue 或 Pull Request 审核，随新版本分发。普通选择 P1～P3 或只要求放大时，不生成候选配方。
 
 ## 输出
 

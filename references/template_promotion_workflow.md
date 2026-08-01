@@ -19,7 +19,7 @@ python <SKILL_ROOT>/scripts/promote_layout_template.py \
   --output <运行目录>/layout_templates.promoted.yaml
 ```
 
-8. 校验输出后，再用审核后的文件替换正式注册表，运行测试、更新样例和重新打包 Skill。不要让脚本在未经复核时直接覆盖正式库。
+8. 校验输出后，在 GitHub 创建“新模板提案”Issue 或 Pull Request，附上配方、样例和测试结果。只有合并审核通过后才更新正式注册表；不要就地修改已安装 Skill，也不要在未经复核时覆盖正式库。
 
 ## `layout_recipe` 必填字段
 
