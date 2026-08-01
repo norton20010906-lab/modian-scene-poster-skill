@@ -22,6 +22,11 @@ except ImportError:
 REQUIRED_CAPABILITIES = {"vision", "image-generation"}
 
 
+def serialize_report(result: dict[str, Any]) -> str:
+    """Return JSON that remains printable on legacy Windows consoles."""
+    return json.dumps(result, ensure_ascii=True, indent=2)
+
+
 def _version_tuple(value: str) -> tuple[int, ...]:
     parts = []
     for item in value.split("."):
@@ -161,6 +166,11 @@ def main() -> None:
     parser.add_argument("--templates", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--host-capability", action="append", default=[])
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="print every check but do not fail the process; intended for CI diagnostics",
+    )
     args = parser.parse_args()
     result = run_preflight(
         workspace=args.workspace,
@@ -169,8 +179,8 @@ def main() -> None:
         model=args.model,
         host_capabilities=args.host_capability,
     )
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    raise SystemExit(0 if result["ready"] else 1)
+    print(serialize_report(result))
+    raise SystemExit(0 if result["ready"] or args.report_only else 1)
 
 
 if __name__ == "__main__":
