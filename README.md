@@ -1,6 +1,6 @@
 # 魔点门禁产品场景海报生成 Skill
 
-一个在 Codex 等支持视觉理解和内置图像生成的 Agent 环境中运行的 V1 Skill。它把产品图片、产品型号和可选补充需求转换成一张 1080×1350 中文使用场景海报。
+一个在 Codex 等支持视觉理解和内置图像生成的 Agent 环境中运行的 V1 Skill。它把产品图片、产品型号和可选补充需求转换成四张 1080×1350 中文使用场景海报候选和一张四宫格联系表；用户选择 P1～P4 后再交付单张成品。
 
 ## 当前状态
 
@@ -48,11 +48,14 @@ V1 不包含独立 Web Demo、外部模型 API、多品牌、多型号模糊匹�
 - 图像生成使用宿主内置能力，不需要 `OPENAI_API_KEY`。
 - 产品建议占画面宽度 20%～30%，小于 18% 会被排版流程拒绝。
 - 刷脸动作由人物朝向和屏幕取景关系表达；中文识别状态由本地脚本稳定叠加。
+- 版式来自内部积累库，用户不在生成前选择模板；Skill 根据内容生成四个结果候选。
+- 四宫格只用于比较，用户选择 P1～P4 后展示对应的全尺寸海报。
 
 ## 已验证样例
 
 - 输入：[D5 Ultra 商品主图](assets/sample_input/d5-ultra-product.webp)
 - 输出：[D5 Ultra 企业入口海报 V2](assets/sample_output/d5-ultra-enterprise-entry-poster-v2.png)
+- 四候选：[D5 Ultra P1～P4 四宫格](assets/sample_output/d5-ultra-four-candidate-sheet.png)
 
 该样例只宣传官网产品目录与用户图片直接支持的内容；经销商和媒体页面仅作发现线索，未用于支撑参数型声明。
 
@@ -79,6 +82,7 @@ V1 只允许一个启用型号。更新资料时：
 
 - `SKILL.md`：Agent 执行入口。
 - `data/`：品牌和单型号可信资料。
+- `data/layout_templates.yaml`：内部版式积累库与默认四候选注册表。
 - `references/`：按需加载的分析、场景、提示词和恢复规则。
 - `scripts/`：确定性验证与排版程序。
 - `evals/`：Skill 行为评测提示。

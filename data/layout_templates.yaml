@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "internal_only": true,
+  "selection_policy": "Skill 根据产品、场景和素材质量选择最多四个内部模板生成候选；用户只在候选生成后选择放大，不在生成前浏览模板菜单。",
+  "candidate_defaults": [
+    "editorial-feature-grid",
+    "centered-story-window",
+    "product-closeup-overlay",
+    "asymmetric-campaign-hero"
+  ],
+  "templates": [
+    {
+      "id": "editorial-feature-grid",
+      "label": "P1 黑底功能编排",
+      "source": "用户参考 P1",
+      "best_for": ["三个并列卖点", "真实刷脸场景", "产品功能长图"],
+      "product_width_target": [0.20, 0.30],
+      "scene_asset": "wide_interaction"
+    },
+    {
+      "id": "centered-story-window",
+      "label": "P2 居中叙事窗口",
+      "source": "用户参考 P2",
+      "best_for": ["一句核心主张", "场景说明", "企业入口"],
+      "product_width_target": [0.20, 0.30],
+      "scene_asset": "wide_interaction"
+    },
+    {
+      "id": "product-closeup-overlay",
+      "label": "P3 产品极近景",
+      "source": "用户参考 P3",
+      "best_for": ["突出硬件外观", "屏幕识别反馈", "单一功能特写"],
+      "product_width_target": [0.55, 0.70],
+      "scene_asset": "closeup_recognition"
+    },
+    {
+      "id": "asymmetric-campaign-hero",
+      "label": "P4 不对称商业主视觉",
+      "source": "商业产品海报规律抽象",
+      "best_for": ["产品质感", "品牌主视觉", "高端科技表达"],
+      "product_width_target": [0.40, 0.55],
+      "scene_asset": "cinematic_product_hero"
+    }
+  ]
+}

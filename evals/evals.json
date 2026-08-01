@@ -3,16 +3,16 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "使用已配置的清晰单独产品图，为已启用的魔点门禁型号生成一张企业办公入口场景海报。",
-      "expected_output": "生成 1080×1350 poster.png 和 manifest.json，产品外观可识别，文案全部来自资料库。",
+      "prompt": "使用已配置的清晰单独产品图，为已启用的魔点门禁型号生成企业办公入口场景海报候选。",
+      "expected_output": "生成四张 1080×1350 候选、contact-sheet.png 和 candidate_manifest.json，产品外观可识别，文案全部来自资料库。",
       "files": [],
       "expectations": [
         "先查看产品图片并创建结构化 analysis.json",
         "最终品牌严格为魔点门禁，卖点为 3～4 条",
         "产品宽度至少占画面 18%，缩略查看仍能辨认屏幕和传感器",
         "人物明确朝向设备，形成正在刷脸的动作关系",
-        "场景主视觉无文字，最终文字由 compose_poster.py 排版",
-        "verify_output.py 返回 valid true"
+        "场景主视觉无文字，最终文字由本地脚本排版",
+        "四宫格包含 P1～P4 且等待用户选择"
       ]
     },
     {
@@ -68,6 +68,17 @@
         "报告补充需求不能超过 200 字",
         "没有调用图像生成工具",
         "没有创建 poster.png"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "用户查看四宫格后回复：选择 P3，放大这一张。",
+      "expected_output": "从 candidate_manifest.json 精确返回 P3 的 1080×1350 单张海报，不重新生成 P1、P2、P4。",
+      "files": [],
+      "expectations": [
+        "选择编号与 product-closeup-overlay 模板对应",
+        "展示 P3 单张绝对路径",
+        "不重新运行四候选流程"
       ]
     }
   ]

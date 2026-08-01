@@ -6,7 +6,7 @@ compatibility: Requires image viewing, built-in image generation, Python 3.10+, 
 
 # 魔点门禁产品场景海报
 
-为一个已验证型号生成一张 1080×1350 中文使用场景海报。事实正确性优先于文案创意：产品能力只来自 `data/products.yaml`，图片观察只能描述外观。
+为一个已验证型号生成四张 1080×1350 中文使用场景海报候选和一张四宫格联系表；用户选择 P1～P4 后，再单独交付选中的全尺寸成品。事实正确性优先于文案创意：产品能力只来自 `data/products.yaml`，图片观察只能描述外观。
 
 ## 输入
 
@@ -74,7 +74,16 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 
 后续仅使用 `copy.validated.json`。
 
-### 4. 生成无字场景主视觉
+### 4. 从内部版式库规划四个候选
+
+读取 `data/layout_templates.yaml` 和 `references/template_selection_workflow.md`。版式库是 Skill 的内部积累，不是生成前展示给用户的风格商城：
+
+- 根据场景、卖点数量、图片质量和产品外形匹配内部模板。
+- 默认生成 P1～P4 四个候选；同一主视觉可被兼容模板复用。
+- 模板只规定信息层级、产品占比、场景窗口和排版约束，不规定产品功能事实。
+- 新模板必须有明确适用条件、通过自动检查和人工样例复核后才能加入默认候选。
+
+### 5. 生成无字场景主视觉
 
 读取 `references/product_prominence_rules.md` 和 `references/image_prompt_template.md`，将产品图片标记为产品参考或编辑目标。使用宿主内置 `image_gen`，不要调用 CLI、SDK 或要求 API Key。
 
@@ -88,9 +97,9 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 - 无生成文字、无虚构 Logo、无水印、无功能图标；识别状态由排版脚本后加
 - 保留 `analysis.json` 中列出的关键外观特征
 
-把选中的场景图复制到运行目录 `scene.png`。项目资产不能只留在宿主默认生成目录。
+根据模板注册表准备所需主视觉，并复制到运行目录 `scenes/`。项目资产不能只留在宿主默认生成目录。P1/P2 可复用同一张宽幅刷脸场景；P3 使用产品极近景；P4 使用不对称产品主视觉。每种不同主视觉单独调用一次图像生成，不用一次调用伪装批量变体。
 
-### 5. 检查产品一致性
+### 6. 检查产品一致性
 
 用 `view_image` 查看 `scene.png`，逐项比较 `analysis.json.identity_anchors`：轮廓、屏幕比例、摄像头位置、主色和安装朝向。同时在 `analysis.json.scene_product_bbox_normalized` 记录场景中产品框 `[x1, y1, x2, y2]`；宽度不足 18% 时，即使场景真实也判定不合格。
 
@@ -100,22 +109,35 @@ python <SKILL_ROOT>/scripts/validate_content.py \
 
 不要进行第三次生成。
 
-### 6. 确定性排版
+### 7. 合成四个候选
 
-运行：
+P1 使用已固化的黑底功能编排：
 
 ```text
-python <SKILL_ROOT>/scripts/compose_poster.py \
-  --background <运行目录>/scene.png \
+python <SKILL_ROOT>/scripts/compose_reference_poster.py \
+  --background <运行目录>/scenes/wide-interaction.png \
   --content <运行目录>/copy.validated.json \
   --product <运行目录>/analysis.json \
   --brand <SKILL_ROOT>/data/brand_profile.yaml \
-  --output <运行目录>/poster.png
+  --output <运行目录>/p1/poster.png
 ```
+
+P2～P4 使用 `compose_candidate_set.py` 的 `p2`、`p3`、`p4` 子命令。四张成品分别写入 `p1/poster.png` 至 `p4/poster.png`，然后运行：
+
+```text
+python <SKILL_ROOT>/scripts/compose_candidate_set.py contact \
+  --poster <运行目录>/p1/poster.png \
+  --poster <运行目录>/p2/poster.png \
+  --poster <运行目录>/p3/poster.png \
+  --poster <运行目录>/p4/poster.png \
+  --output <运行目录>/contact-sheet.png
+```
+
+该步骤同时生成 `candidate_manifest.json`，状态为 `awaiting_user_selection`。
 
 图像模型不负责中文文字。`copy.json` 可选使用 `status_badge`，值只能为“识别成功”“打卡成功”或“欢迎通行”；脚本会根据产品框把状态标签放在产品附近。若排版脚本报告溢出，缩短标题或副标题后重新执行内容校验和排版；不要缩小到不可读字号。
 
-### 7. 最终验收
+### 8. 候选验收与用户选择
 
 运行：
 
@@ -126,16 +148,20 @@ python <SKILL_ROOT>/scripts/verify_output.py \
   --catalog <SKILL_ROOT>/data/products.yaml
 ```
 
-再用 `view_image` 检查最终海报，并逐项执行 `references/quality_checklist.md`。自动校验或人工视觉检查任一失败，都不要声称已完成。
+分别检查四张海报，再用 `view_image` 检查四宫格并逐项执行 `references/quality_checklist.md`。自动校验或人工视觉检查任一失败，都不要把该候选放入四宫格。
+
+展示 `contact-sheet.png` 后暂停，要求用户回复 P1、P2、P3 或 P4。用户选择后，展示对应的原始 1080×1350 文件；如需进一步调整，只修改选中模板，不重新生成其余三个候选。
 
 ## 输出
 
-成功时向用户展示最终海报，并返回：
+候选阶段向用户展示四宫格，并返回：
 
-- `poster.png` 的绝对路径
-- `manifest.json` 的绝对路径
-- 使用的型号和场景
-- 是否启用了产品裁切回退
+- `contact-sheet.png` 的绝对路径
+- P1～P4 单张文件的绝对路径
+- `candidate_manifest.json` 的绝对路径
+- 提示用户回复一个候选编号进行单张放大
+
+选择阶段再返回选中海报的绝对路径、模板 ID、型号、场景与回退状态。
 
 不要只返回提示词或场景草图。不要把中间场景图误称为最终海报。
 
