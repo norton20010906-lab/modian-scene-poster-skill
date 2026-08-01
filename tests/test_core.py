@@ -58,6 +58,15 @@ class ProductCatalogTests(unittest.TestCase):
         with self.assertRaisesRegex(ProductCatalogError, "尚未启用"):
             load_product(self.catalog, "M1-PRO")
 
+    def test_bundled_d5_ultra_record_is_enabled_and_has_three_verified_points(self):
+        catalog = Path(__file__).resolve().parents[1] / "data" / "products.yaml"
+        product = load_product(catalog, "D5Ultra")
+        self.assertEqual(product["model"], "D5 Ultra")
+        self.assertEqual(
+            [point["id"] for point in product["selling_points"]],
+            ["face-recognition", "attendance-access", "visual-screen"],
+        )
+
 
 class InputValidationTests(unittest.TestCase):
     def test_missing_image_is_rejected(self):

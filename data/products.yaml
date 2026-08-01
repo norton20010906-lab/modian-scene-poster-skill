@@ -3,22 +3,46 @@
   "catalog_policy": "V1 只允许一个 enabled=true 的已验证型号",
   "products": [
     {
-      "model": "REPLACE_WITH_VERIFIED_MODEL",
-      "aliases": [],
-      "enabled": false,
-      "category": "刷脸门禁机",
-      "verified_features": [],
-      "selling_points": [],
-      "recommended_scenes": [],
+      "model": "D5 Ultra",
+      "aliases": ["D5Ultra", "D5 ULTRA"],
+      "enabled": true,
+      "category": "智能人脸考勤门禁机",
+      "verified_features": [
+        "智能人脸识别",
+        "考勤",
+        "门禁通行",
+        "前置可视化显示屏"
+      ],
+      "selling_points": [
+        {
+          "id": "face-recognition",
+          "text": "智能人脸识别通行",
+          "verified": true
+        },
+        {
+          "id": "attendance-access",
+          "text": "考勤门禁一体化",
+          "verified": true
+        },
+        {
+          "id": "visual-screen",
+          "text": "前置可视化显示屏",
+          "verified": true
+        }
+      ],
+      "recommended_scenes": ["企业办公入口", "企业前台"],
       "prohibited_claims": [
         "绝对零误识",
         "100%准确",
-        "行业第一"
+        "行业第一",
+        "千人千面",
+        "无感通行",
+        "极速识别"
       ],
       "sources": [
         {
-          "label": "等待用户提供的官方或授权产品资料",
-          "status": "pending"
+          "label": "用户提供的商品主图：可见“D5 Ultra 智能人脸考勤门禁机”及产品正面外观",
+          "status": "verified"
         }
       ]
     }
